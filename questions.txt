@@ -1,0 +1,17 @@
+QUESTION 1
+What is the capital of France?
+1) Paris
+2) Nice
+3) Lyon
+4) Toulouse
+5) Calais
+Correct Answer: 1
+
+QUESTION 2
+What is the full name of the UK?
+1) United Kingdom of Great Britain and Ireland
+2) United Kingdom of the British Isles
+3) United Kingdom
+4) United Kingdom of Great Britain and Nothern Ireland
+5) United Kingdom of the British Isles and Ireland
+Correct Answer: 3
