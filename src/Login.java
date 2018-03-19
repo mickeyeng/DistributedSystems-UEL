@@ -16,7 +16,7 @@ public class Login implements ActionListener {
 	
 	public Login() {
 		login = new JFrame ("Login Screen"); // NAME OF GUI
-		login .setSize(248,215);
+		login.setSize(248,215);
 		login.setLocation(300,300);
 		login.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // CLOSES GUI 
 		login.getContentPane().setLayout(null);

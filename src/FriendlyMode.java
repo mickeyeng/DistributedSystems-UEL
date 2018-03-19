@@ -7,10 +7,6 @@
 
 // NEED TO DISPLAY LEADERBOARD AT THE END
 	// DONE BUT NEED TO TEST BY USING MORE THAN 1 CLIENT
-	// NEEDS USERNAME ON THE LEADERBOARD AS WELL
-// SERVER NEEDS TO STOP LISTENING FOR USER INPUT WHEN TIMER IS FINISHED
-// TIMER NEEDS TO STOP IF QUIZ IS COMPLETED
-	// CODED BUT DOES NOT WORK
 
 public class FriendlyMode {
 	static Client client;
@@ -21,8 +17,8 @@ public class FriendlyMode {
 		if(!client.start()) { // IF CONNECTION TO CLIENT FAILS BREAK THE LOOP
 			return;
 		}
-		else {
-			new GameTimer();
-		}
+//		else {
+//			new GameTimer();
+//		}
 	}
 }

@@ -44,6 +44,7 @@ public class GameTimer extends JFrame {
 			    }
 			    while (delay != 0);
 			    JOptionPane.showMessageDialog(null, "Times Up!", "Warning", JOptionPane.ERROR_MESSAGE);
+			    timer.cancel();
 			    dispose();
             }
         };
@@ -53,7 +54,4 @@ public class GameTimer extends JFrame {
 		setLocation(300, 300);
 		setVisible(true);
 	}
-	public void closingFrame(){
-        dispose();
-    }
 }

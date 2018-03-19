@@ -48,7 +48,7 @@ public class ServerThread extends Thread {
 			switch(mh.getType()) {
 
 			case MessageHandler.MESSAGE:
-				Server.broadcast(message); // BROADCAST METHOD CALLED
+				Server.broadcast(); // BROADCAST METHOD CALLED
 				break;
 			}
 		}

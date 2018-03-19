@@ -12,6 +12,10 @@ import java.text.*;
 import java.util.*;
 import java.util.Date;
 import java.sql.*;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.swing.JFrame;
 
 public class Server {
 	static ArrayList<ServerThread> clients = new ArrayList<ServerThread>(); // LIST OF ONLINE USERS
@@ -22,6 +26,9 @@ public class Server {
 	ServerSocket serverSocket;
 	static Socket socket;
 
+	/**
+	 * @wbp.parser.entryPoint
+	 */
 	public Server(int p, ServerGUI sg) { // CONTRUCTOR
 		sgui = sg;
 		port = p;		
@@ -45,7 +52,7 @@ public class Server {
 				ServerThread client = new ServerThread(socket); // CREATES SERVERTHREAD  
 				clients.add(client); // ADDS CLIENT TO THE ARRAY						
 				client.start(); // STARTS THE THREAD
-				broadcast(null);
+				broadcast();
 			}
 
 			try {
@@ -85,7 +92,7 @@ public class Server {
 			e.printStackTrace();
 		}
 	}		
-
+	
 	public static void display(String msg) { // DISPLAY METHOD TO UPDATE EVENT LOG ON SERVER GUI
 		String eventUpdate = sdf.format(new Date()) + " - " + msg + "\n";
 		sgui.appendEvent(eventUpdate);
@@ -93,7 +100,8 @@ public class Server {
 
 	static int score = 0;
 	
-	public synchronized static void broadcast(String message) { // BROADCAST TO SEND MESSAGE TO ALL CLIENT CONNECTED
+	public synchronized static void broadcast() { // BROADCAST PRINT QUESTIONS AND ANSWER CHOICES TO USERS
+		new QuizTimer();
 		String question = "";
 	    String choice1 = "";
 	    String choice2 = "";
@@ -264,8 +272,9 @@ public class Server {
 		for(int i1 = clients.size(); --i1 >= 0;) {
 			ServerThread ct = clients.get(i1);
 			System.out.println("Final Score: " + score + "\nGood Attempt!");
-//			if(clients.size() > 1) { // RUNS ONLY IF THERE IS MORE THAN ONE CLIENT CONNECTED				
+//			if(clients.size() > 1) { // RUNS ONLY IF THERE IS MORE THAN ONE CLIENT CONNECTED	
 				leaderboard(); // CALLS THE LEADBOARD METHOD ON THIS CLASS TO PRINT THE FINAL RANKING
+				QuizTimer.timer.cancel();
 //			}
 			if(!ct.writeMsg("Final Score: " + score + "\nGood Attempt!")) {
 				clients.remove(i1);
