@@ -24,7 +24,8 @@ public class Options {
 		btnGroupChat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				options.dispose(); // CLOSES GUI
-				PracticeMode.start();
+//				PracticeMode.start();
+				new PracticeModeGUI();
 			}
 		});
 		btnGroupChat.setBounds(10, 59, 137, 23);

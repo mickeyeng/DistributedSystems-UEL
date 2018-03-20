@@ -5,7 +5,7 @@ import java.net.*;
 public class ServerThread extends Thread {
 	Socket socket;
 	ObjectInputStream in; // OBJECT INPUT
-	ObjectOutputStream out; // OBJECT OUTPUT
+	static ObjectOutputStream out; // OBJECT OUTPUT
 	static String username;
 	MessageHandler mh; // OBJECT LINKED TO CLASS 'MESSAGEHANDLER'
 
@@ -46,15 +46,15 @@ public class ServerThread extends Thread {
 			String message = mh.getMessage();  // GETS MESSAGE FROM CLASS 'MESSAGEHANDLER' THROUGH OBJECT 'mh'
 
 			switch(mh.getType()) {
-
+//
 			case MessageHandler.MESSAGE:
-				Server.broadcast(); // BROADCAST METHOD CALLED
+				Server.broadcast(message); // BROADCAST METHOD CALLED
 				break;
 			}
 		}
 	}
 
-	public boolean writeMsg(String msg) { // METHOD TO SEND MESSAGE TO CLIENT SIDE
+	public static boolean writeMsg(String msg) { // METHOD TO SEND MESSAGE TO CLIENT SIDE
 		try {
 			out.writeObject(msg); // WRITES MESSAGE TO CLIENTS
 		}

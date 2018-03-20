@@ -23,9 +23,9 @@ public class PracticeModeGUI extends JFrame implements ActionListener { // EXTEN
 	String defaultHost;
 	private JTextField textField;
 	
-	public static void main(String[] args) {
-		new PracticeModeGUI();
-	}
+//	public static void main(String[] args) {
+//		new PracticeModeGUI();
+//	}
 
 	PracticeModeGUI() {
 		super("Game Session"); // NAME OF GUI
@@ -103,7 +103,7 @@ public class PracticeModeGUI extends JFrame implements ActionListener { // EXTEN
 		if(o == joinRoom) {
 			String displayName = txtMessageArea.getText().trim(); // RETRIEVES DISPLAY NAME 
 
-			client = new Client(Client.getHost(), Client.getPort(), displayName); // STARTS CLIENT THREAD (WHICH CONNECTS TO SERVER)
+			client = new Client(Client.getHost(), Client.getPort(), displayName, this); // STARTS CLIENT THREAD (WHICH CONNECTS TO SERVER)
 			if(!client.start()) { // IF CONNECTION TO CLIENT FAILS BREAK THE LOOP
 				return;
 			}

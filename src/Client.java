@@ -8,18 +8,18 @@ public class Client  {
 	ObjectInputStream in; // OBJECT TO READ INPUT
 	static ObjectOutputStream out; // OBJECT TO SEND OUTPUT
 	Socket socket; // SOCKET FOR CONNECTIONS
-//	static PracticeModeGUI cgui; // CLIENT GUI VARIABLE (THIS WILL BE THE GROUP CHAT ROOM WHEN OPENED)
+	static PracticeModeGUI cgui; // CLIENT GUI VARIABLE (THIS WILL BE THE GROUP CHAT ROOM WHEN OPENED)
 	static String host; // HOST VARIABLE
 	static String username; // USERNAME VARIABLE (NOT WORKING HOW IT SHOULD)
 	static int port; // PORT VARIABLE
 
 	Client(String server, int p, String user 
-//			, PracticeModeGUI cg
+			, PracticeModeGUI cg
 			) { // CONSTRUCTOR WHICH NEEDS TO BE PASSED THE SERVER NAME, PORT NUMBER, USERNAME, CHAT ROOM GUI
 		host = server; // SERVER VARIABLE IS PASSED TO HOST VARIABLE
 		port = p; // P VARIABLE IS PASSED TO PORT VARIABLE
 		username = user; // USER VARIABLE PASSED TO USERNAME VARIABLE
-//		cgui = cg; // GUI PASSED TO GUI VARIABLE
+		cgui = cg; // GUI PASSED TO GUI VARIABLE
 	}
 
 	public boolean start() { // STARTS WHEN CONNECTION IS ALIVE (WHICH IS WHY ITS BOOLEAN)
@@ -59,8 +59,8 @@ public class Client  {
 	}
 
 	public static void display(String msg) { // TO DISPLAY MESSAGES TO CLIENT
-//		cgui.append(msg + "\n"); // EDITS THE CHAT ROOM CHAT LOG AREA
-		System.out.println(msg + "\n");
+		cgui.append(msg + "\n"); // EDITS THE CHAT ROOM CHAT LOG AREA
+//		System.out.println(msg + "\n");
 	}
 	
 	public static void players(String numPlayers){
@@ -77,7 +77,7 @@ public class Client  {
 	}
 	
 	public static void main(String[] args) {
-		Client client = new Client(host, port, username); // STARTS CLIENT WITH GIVEN VARIABLES
+		Client client = new Client(host, port, username, cgui); // STARTS CLIENT WITH GIVEN VARIABLES
 		if(!client.start()) { // IF CONNECTION CAN NOT START FOR SOME REASON LIKE NO HOST GIVEN
 			return; // BREAKS THE LOOP
 		}
@@ -145,7 +145,8 @@ public class Client  {
 			while(true) {
 				try {
 					String msg = (String) in.readObject(); // READS MESSAGES INCOMING
-//					cgui.append(msg); // DISPLAYS THE MESSAGES ON THE CHAT LOG OF THE GUI
+					cgui.append(msg); // DISPLAYS THE MESSAGES ON THE CHAT LOG OF THE GUI
+//					System.out.println(msg);
 				}
 				catch(IOException e) {
 					display("Server had to close the connection: " + e); // IF SERVER SHUTS OFF OF CONNECTION TO THE CLIENT IS LOST

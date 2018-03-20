@@ -13,12 +13,9 @@ public class FriendlyMode {
 	static String displayName;
 	
 	public static void start() {
-		client = new Client(Client.getHost(), Client.getPort(), displayName); // STARTS CLIENT THREAD (WHICH CONNECTS TO SERVER)
+		client = new Client(Client.getHost(), Client.getPort(), displayName, null); // STARTS CLIENT THREAD (WHICH CONNECTS TO SERVER)
 		if(!client.start()) { // IF CONNECTION TO CLIENT FAILS BREAK THE LOOP
 			return;
 		}
-//		else {
-//			new GameTimer();
-//		}
 	}
 }

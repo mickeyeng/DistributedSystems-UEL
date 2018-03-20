@@ -5,6 +5,9 @@
 // NEED TO ASK USER HOW MANY PLAYERS 
 // NEED TO CREATE THREADS TO MAKE USERS WAIT FOR EACH OTHER IF CLIENT IS MORE THAN 1
 	// FOR FRIENDLY AND TOURNAMENT MODE
+// CLIENT FROM ANOTHER COMPUTER IS ABLE TO CONNECT BUT QUESTIONS LOAD HERE NOT ON THAT COMPUTER
+	// QUESTIONS LOAD BUT USER INPUT IS NOT BEING READ THROUGH THE CLIENT PC
+		// CODED A POSSIBLE SOLUTION WHICH NEEDS TO BE TESTED
 
 import java.io.*;
 import java.net.*;
@@ -12,10 +15,6 @@ import java.text.*;
 import java.util.*;
 import java.util.Date;
 import java.sql.*;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.swing.JFrame;
 
 public class Server {
 	static ArrayList<ServerThread> clients = new ArrayList<ServerThread>(); // LIST OF ONLINE USERS
@@ -26,9 +25,6 @@ public class Server {
 	ServerSocket serverSocket;
 	static Socket socket;
 
-	/**
-	 * @wbp.parser.entryPoint
-	 */
 	public Server(int p, ServerGUI sg) { // CONTRUCTOR
 		sgui = sg;
 		port = p;		
@@ -52,7 +48,7 @@ public class Server {
 				ServerThread client = new ServerThread(socket); // CREATES SERVERTHREAD  
 				clients.add(client); // ADDS CLIENT TO THE ARRAY						
 				client.start(); // STARTS THE THREAD
-				broadcast();
+				broadcast(null);
 			}
 
 			try {
@@ -100,7 +96,7 @@ public class Server {
 
 	static int score = 0;
 	
-	public synchronized static void broadcast() { // BROADCAST PRINT QUESTIONS AND ANSWER CHOICES TO USERS
+	public synchronized static void broadcast(String message) { // BROADCAST PRINT QUESTIONS AND ANSWER CHOICES TO USERS
 		new QuizTimer();
 		String question = "";
 	    String choice1 = "";
@@ -123,9 +119,8 @@ public class Server {
 			    //Finds the question
 			    if(line.contains("?")){
 			        run.question = line;
-			        System.out.println(run.question);
+//			        System.out.println(run.question);
 			        sgui.appendEvent("\nQuestion: " + run.getQuestion() + "\n");
-			        
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
 						if(!ct.writeMsg(run.question)) {
@@ -138,7 +133,7 @@ public class Server {
 			    //Finds answer "1"
 			    if(line.contains("1)")){
 			        run.choice1 = line + "\n";
-			        System.out.print(run.choice1);
+//			        System.out.print(run.choice1);
 			        sgui.appendEvent(run.getChoice1());
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
@@ -152,7 +147,7 @@ public class Server {
 			    //Finds answer "2"
 			    if(line.contains("2)")){
 			        run.choice2 = line + "\n";
-			        System.out.print(run.choice2);
+//			        System.out.print(run.choice2);
 			        sgui.appendEvent(run.getChoice2());
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
@@ -166,7 +161,7 @@ public class Server {
 			    //Finds answer "3"
 			    if(line.contains("3)")){
 			        run.choice3 = line + "\n"; 
-			        System.out.print(run.choice3);
+//			        System.out.print(run.choice3);
 			        sgui.appendEvent(run.getChoice3());
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
@@ -180,7 +175,7 @@ public class Server {
 			    //Finds answer "4"
 			    if(line.contains("4)")){
 			        run.choice4 = line + "\n";
-			        System.out.print(run.choice4);
+//			        System.out.print(run.choice4);
 			        sgui.appendEvent(run.getChoice4());
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
@@ -194,7 +189,7 @@ public class Server {
 			    //Finds answer "5"
 			    if(line.contains("5)")){
 			        run.choice5 = line + "\n";
-			        System.out.print(run.choice5);
+//			        System.out.print(run.choice5);
 			        sgui.appendEvent(run.getChoice5());
 			        for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
@@ -222,8 +217,6 @@ public class Server {
 						
 				 System.out.print("\nYour Answer: ");
 				 userAnswer = sc.next();
-				
-				sgui.appendEvent(uname + " has entered: " + userAnswer + "\n"); 
 
 				for(int i3 = clients.size(); --i3 >= 0;) {
 					ServerThread ct = clients.get(i3);
@@ -237,7 +230,8 @@ public class Server {
 	            if(userAnswer.equalsIgnoreCase(answer)){
 	            	for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
-						System.out.println("Correct!\n");
+//						System.out.println("Correct!\n");
+						sgui.appendEvent(uname + " has entered: " + userAnswer + "\n");
 						sgui.appendEvent(uname + " got the correct answer\n\n");
 						if(!ct.writeMsg("\nCorrect!\n\n")) {
 							clients.remove(i1);
@@ -252,7 +246,8 @@ public class Server {
 	            else if (!userAnswer.equalsIgnoreCase(answer)) {
 	            	for(int i1 = clients.size(); --i1 >= 0;) {
 						ServerThread ct = clients.get(i1);
-						System.out.println("Wrong Answer. Correct Answer Was: " + run.getAnswer() + "\n");
+//						System.out.println("Wrong Answer. Correct Answer Was: " + run.getAnswer() + "\n");
+						sgui.appendEvent(uname + " has entered: " + userAnswer + "\n");
 						sgui.appendEvent(uname + " got the wrong answer. The correct answer was: " + run.getAnswer() + "\n\n");
 						if(!ct.writeMsg("\nWrong Answer. Correct Answer Was: " + run.getAnswer() + "\n\n")) {
 							clients.remove(i1);
@@ -271,7 +266,7 @@ public class Server {
 		
 		for(int i1 = clients.size(); --i1 >= 0;) {
 			ServerThread ct = clients.get(i1);
-			System.out.println("Final Score: " + score + "\nGood Attempt!");
+//			System.out.println("Final Score: " + score + "\nGood Attempt!");
 //			if(clients.size() > 1) { // RUNS ONLY IF THERE IS MORE THAN ONE CLIENT CONNECTED	
 				leaderboard(); // CALLS THE LEADBOARD METHOD ON THIS CLASS TO PRINT THE FINAL RANKING
 				QuizTimer.timer.cancel();
@@ -312,7 +307,16 @@ public class Server {
 		String uname = ServerThread.username; // GETS THE USERNAME FROM THE SERVERTHREAD CLASS
 		
 		myMap.put(uname, score); // ADDS 2 VALUES TO THE MAP OBJECT CREATED - USERNAME FROM THE SERVERTHREAD CLASS AND SCORE VALUE
-        System.out.println(myMap.toString()); // PRINTS THE MAP VALUES TO THE CMD
+//        System.out.println(myMap.toString()); // PRINTS THE MAP VALUES TO THE CMD
+		
+		for(int i1 = clients.size(); --i1 >= 0;) {
+			ServerThread ct = clients.get(i1);
+
+			if(!ct.writeMsg(myMap.toString())) {
+				clients.remove(i1);
+				display("Disconnected Client. User was removed from list");
+			}
+		}
 	}
 	
 	public static String getHost() { // GET HOST METHOD
