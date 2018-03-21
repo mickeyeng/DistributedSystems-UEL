@@ -1,103 +1,117 @@
-// NEED TO READ USER INPUT IN GUI INSTEAD OF CMD
-	// CAN BE DONE LAST AFTER ALL MODES ARE ATTEMPTED
 // NEED A LEADERBOARD FOR FRIENDLY AND TOURNAMENT MODE
 	// NEED TO TEST WITH MORE THAN 1 CLIENT
 // NEED TO ASK USER HOW MANY PLAYERS 
 // NEED TO CREATE THREADS TO MAKE USERS WAIT FOR EACH OTHER IF CLIENT IS MORE THAN 1
 	// FOR FRIENDLY AND TOURNAMENT MODE
 // CLIENT FROM ANOTHER COMPUTER IS ABLE TO CONNECT BUT QUESTIONS LOAD HERE NOT ON THAT COMPUTER
-	// QUESTIONS LOAD BUT USER INPUT IS NOT BEING READ THROUGH THE CLIENT PC
-		// CODED A POSSIBLE SOLUTION WHICH NEEDS TO BE TESTED
+
+// CHANGE CLIENT GUI SO INPUT IS FROM JOPTIONPANE
+	// IF IT CANT BE DONE LEAVE IT
+// ADD TIMER ON CLIENT GUI INSTEAD OF HAVING ANOTHER FRAME OPENED
+	// DONE BUT TIMER NEEDS TO START ONCE QUIZ STARTS
+		// FOR NOW IT STARTS WHEN GUI IS OPENED
+// NEED LEADERBOARD TO BE ON CLIENT GUI AND NOT AS A JOPTIONPANE
+// NEED PORT AND HOST TO SHOW FROM FILE
+// IF WANTED SERVER GUI CAN BE ADDED BACK LATER BUT DOES NOT CARRY MARKS AND IS MORE CODE
 
 import java.io.*;
 import java.net.*;
-import java.text.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
-import java.util.Date;
-import java.sql.*;
+import javax.swing.JOptionPane;
 
+/*
+ * The server that can be run both as a console application or a GUI
+ */
 public class Server {
-	static ArrayList<ServerThread> clients = new ArrayList<ServerThread>(); // LIST OF ONLINE USERS
-	static ServerGUI sgui;
-	static SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	// an ArrayList to keep the list of the Client
+	static ArrayList<ClientThread> al;
+	// the port number to listen for connection
 	static int port;
+	static String host;
+	// the boolean that will be turned of to stop the server
 	boolean keepGoing;
-	ServerSocket serverSocket;
-	static Socket socket;
-
-	public Server(int p, ServerGUI sg) { // CONTRUCTOR
-		sgui = sg;
-		port = p;		
+	
+	public Server(int p) {
+		port = p;
+		// ArrayList for the Client list
+		al = new ArrayList<ClientThread>();
 	}
 	
 	public void start() {
 		keepGoing = true;
+		/* create socket server and wait for connection requests */
 		try 
 		{
-			serverSocket = new ServerSocket(port); // CREATES SERVER SOCKET
-			display("Server waiting for Clients on port " + port);
-			
-			while(keepGoing) 
-			{				
-				socket = serverSocket.accept(); // LISTENS FOR USER JOINING TO SERVER
-				
-				if(!keepGoing) {
-					break;
-				}
-				
-				ServerThread client = new ServerThread(socket); // CREATES SERVERTHREAD  
-				clients.add(client); // ADDS CLIENT TO THE ARRAY						
-				client.start(); // STARTS THE THREAD
-				broadcast(null);
-			}
+			// the socket used by the server
+			ServerSocket serverSocket = new ServerSocket(port);
 
+			// infinite loop to wait for connections
+			while(keepGoing) 
+			{
+				// format message saying we are waiting
+				display("Server waiting for Clients on port " + port + ".");
+				
+				Socket socket = serverSocket.accept();  	// accept connection
+				// if I was asked to stop
+				if(!keepGoing)
+					break;
+				ClientThread t = new ClientThread(socket);  // make a thread of it
+				al.add(t);									// save it in the ArrayList
+				t.start();
+				startGame();
+			}
+			// I was asked to stop
 			try {
 				serverSocket.close();
-				for(int i = 0; i < clients.size(); ++i) {
-					ServerThread tc = clients.get(i);
+				for(int i = 0; i < al.size(); ++i) {
+					ClientThread tc = al.get(i);
 					try {
-						tc.in.close();
-						tc.out.close();
-						tc.socket.close();
+					tc.sInput.close();
+					tc.sOutput.close();
+					tc.socket.close();
 					}
-					catch(IOException e) {
-						e.printStackTrace();
-					}
-					finally {
-						try {
-							socket.close();
-						} catch(IOException e) {
-							e.printStackTrace();
-						}
-						try {
-							serverSocket.close();
-						} catch(IOException e) {
-							e.printStackTrace();
-						}
+					catch(IOException ioE) {
+						// not much I can do
 					}
 				}
 			}
 			catch(Exception e) {
 				display("Exception closing the server and clients: " + e);
-				e.printStackTrace();
 			}
 		}
-		
+		// something went bad
 		catch (IOException e) {
-			display(sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n");
-			e.printStackTrace();
+            String msg = "Exception on new ServerSocket: " + e + "\n";
+			display(msg);
 		}
 	}		
-	
-	public static void display(String msg) { // DISPLAY METHOD TO UPDATE EVENT LOG ON SERVER GUI
-		String eventUpdate = sdf.format(new Date()) + " - " + msg + "\n";
-		sgui.appendEvent(eventUpdate);
+    /*
+     * For the GUI to stop the server
+     */
+	public void stop() {
+		keepGoing = false;
+		try {
+			new Socket(host, port);
+		}
+		catch(Exception e) {
+			// nothing I can really do
+		}
 	}
-
-	static int score = 0;
+	/*
+	 * Display an event (not a message) to the console or the GUI
+	 */
+	static void display(String msg) {
+		System.out.println(msg);
+	}
 	
-	public synchronized static void broadcast(String message) { // BROADCAST PRINT QUESTIONS AND ANSWER CHOICES TO USERS
-		new QuizTimer();
+	static int score = 0;
+	static String userAnswer;
+	
+	public void startGame() {
 		String question = "";
 	    String choice1 = "";
 	    String choice2 = "";
@@ -106,10 +120,8 @@ public class Server {
 	    String choice5 = "";
 	    String answer = "";
 	    String line;
-	    String userAnswer;
 	    int i = 0;
-	    String uname = ServerThread.username; // GETS USERNAME FROM SERVERTHREAD CLASS
-	    
+
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader("questions.txt")); // FINDS THE 'questions.txt' FILE ON THE LOCAL MACHINE
 			Scanner sc = new Scanner(System.in);
@@ -118,13 +130,12 @@ public class Server {
 			while((line = reader.readLine()) != null){
 			    //Finds the question
 			    if(line.contains("?")){
-			        run.question = line;
-//			        System.out.println(run.question);
-			        sgui.appendEvent("\nQuestion: " + run.getQuestion() + "\n");
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        run.question = line + "\n";
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.question)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -133,12 +144,11 @@ public class Server {
 			    //Finds answer "1"
 			    if(line.contains("1)")){
 			        run.choice1 = line + "\n";
-//			        System.out.print(run.choice1);
-			        sgui.appendEvent(run.getChoice1());
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.choice1)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -147,12 +157,11 @@ public class Server {
 			    //Finds answer "2"
 			    if(line.contains("2)")){
 			        run.choice2 = line + "\n";
-//			        System.out.print(run.choice2);
-			        sgui.appendEvent(run.getChoice2());
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.choice2)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -161,12 +170,11 @@ public class Server {
 			    //Finds answer "3"
 			    if(line.contains("3)")){
 			        run.choice3 = line + "\n"; 
-//			        System.out.print(run.choice3);
-			        sgui.appendEvent(run.getChoice3());
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.choice3)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -175,12 +183,11 @@ public class Server {
 			    //Finds answer "4"
 			    if(line.contains("4)")){
 			        run.choice4 = line + "\n";
-//			        System.out.print(run.choice4);
-			        sgui.appendEvent(run.getChoice4());
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.choice4)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -189,12 +196,11 @@ public class Server {
 			    //Finds answer "5"
 			    if(line.contains("5)")){
 			        run.choice5 = line + "\n";
-//			        System.out.print(run.choice5);
-			        sgui.appendEvent(run.getChoice5());
-			        for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
+			        
+			        for(int i1 = al.size(); --i1 >= 0;) {
+						ClientThread ct = al.get(i1);
 						if(!ct.writeMsg(run.choice5)) {
-							clients.remove(i1);
+							al.remove(i1);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
@@ -206,56 +212,65 @@ public class Server {
 			        answer = a[1];
 			        run.answer = answer;
 
-					sgui.appendEvent("Waiting for users answer\n"); 
-					for(int i3 = clients.size(); --i3 >= 0;) {
-						ServerThread ct = clients.get(i3);
+					for(int i3 = al.size(); --i3 >= 0;) {
+						ClientThread ct = al.get(i3);
 						if(!ct.writeMsg("Please enter you answer now\n\n")) {
-							clients.remove(i3);
+							al.remove(i3);
 							display("Disconnected Client. User was removed from list");
 						}
 					}
 						
-				 System.out.print("\nYour Answer: ");
-				 userAnswer = sc.next();
+//				 System.out.print("\nYour Answer: ");
+//				 userAnswer = sc.next();
+					
+				String whatTheUserEntered = JOptionPane.showInputDialog(null, "Your Answer: ");
 
-				for(int i3 = clients.size(); --i3 >= 0;) {
-					ServerThread ct = clients.get(i3);
-					if(!ct.writeMsg("Your answer: " + userAnswer)) {
-						clients.remove(i3);
-						display("Disconnected Client. User was removed from list");
-					}
+				if (whatTheUserEntered == null) {
+					System.out.println("The user canceled");
 				}
-						
-	            //Checks if the user's input matches the correct answer from the file
-	            if(userAnswer.equalsIgnoreCase(answer)){
-	            	for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
-//						System.out.println("Correct!\n");
-						sgui.appendEvent(uname + " has entered: " + userAnswer + "\n");
-						sgui.appendEvent(uname + " got the correct answer\n\n");
-						if(!ct.writeMsg("\nCorrect!\n\n")) {
-							clients.remove(i1);
-							display("Disconnected Client. User was removed from list");
+				else {
+					userAnswer = whatTheUserEntered;
+					//Checks if the user's input matches the correct answer from the file
+		            if(userAnswer.equalsIgnoreCase(answer)){
+		            	for(int i1 = al.size(); --i1 >= 0;) {
+		            		ClientThread ct = al.get(i1);
+							int usersInput = JOptionPane.showOptionDialog(null, "\nCorrect!\n\n", "Correct Answer", JOptionPane.DEFAULT_OPTION,JOptionPane.INFORMATION_MESSAGE, null, new Object[]{}, null);
+							String inputAnswer = "Your Answer: " + userAnswer;
+							
+							if(!ct.writeMsg(inputAnswer)) {
+								al.remove(i1);
+								display("Disconnected Client. User was removed from list");
+							}
+							
+							if(!ct.writeMsg(Integer.toString(usersInput))) {
+								al.remove(i1);
+								display("Disconnected Client. User was removed from list");
+							}
 						}
-					}
-	                i++;
-	                score++;
-	            } 
+		                i++;
+		                score++;
+		            } 
 
-	            //Checks if the user's input doesn't match the correct answer from the file
-	            else if (!userAnswer.equalsIgnoreCase(answer)) {
-	            	for(int i1 = clients.size(); --i1 >= 0;) {
-						ServerThread ct = clients.get(i1);
-//						System.out.println("Wrong Answer. Correct Answer Was: " + run.getAnswer() + "\n");
-						sgui.appendEvent(uname + " has entered: " + userAnswer + "\n");
-						sgui.appendEvent(uname + " got the wrong answer. The correct answer was: " + run.getAnswer() + "\n\n");
-						if(!ct.writeMsg("\nWrong Answer. Correct Answer Was: " + run.getAnswer() + "\n\n")) {
-							clients.remove(i1);
-							display("Disconnected Client. User was removed from list");
-						}
-					}			            	
-	            	i++;
-	            }
+		            //Checks if the user's input doesn't match the correct answer from the file
+		            else if (!userAnswer.equalsIgnoreCase(answer)) {
+		            	for(int i1 = al.size(); --i1 >= 0;) {
+							ClientThread ct = al.get(i1);
+							int usersInput = JOptionPane.showOptionDialog(null, "\nWrong Answer. Correct Answer Was: " + run.getAnswer() + "\n\n", "Wrong Answer", JOptionPane.DEFAULT_OPTION,JOptionPane.INFORMATION_MESSAGE, null, new Object[]{}, null);
+							String inputAnswer = "Your Answer: " + userAnswer;
+							
+							if(!ct.writeMsg(inputAnswer)) {
+								al.remove(i1);
+								display("Disconnected Client. User was removed from list");
+							}
+							
+							if(!ct.writeMsg(Integer.toString(usersInput))) {
+								al.remove(i1);
+								display("Disconnected Client. User was removed from list");
+							}
+						}			            	
+		            	i++;
+		            }
+				}
 		    }
 	    } 
 	    sc.close();
@@ -264,15 +279,15 @@ public class Server {
 			e.printStackTrace();
 		}
 		
-		for(int i1 = clients.size(); --i1 >= 0;) {
-			ServerThread ct = clients.get(i1);
-//			System.out.println("Final Score: " + score + "\nGood Attempt!");
+		for(int i1 = al.size(); --i1 >= 0;) {
+			ClientThread ct = al.get(i1);
+			System.out.println("Final Score: " + score + "\nGood Attempt!");
 //			if(clients.size() > 1) { // RUNS ONLY IF THERE IS MORE THAN ONE CLIENT CONNECTED	
 				leaderboard(); // CALLS THE LEADBOARD METHOD ON THIS CLASS TO PRINT THE FINAL RANKING
-				QuizTimer.timer.cancel();
+				ClientGUI.timer.cancel();
 //			}
-			if(!ct.writeMsg("Final Score: " + score + "\nGood Attempt!")) {
-				clients.remove(i1);
+			if(!ct.writeMsg("Final Score: \nGood Attempt!")) {
+				al.remove(i1);
 				display("Disconnected Client. User was removed from list");
 			}
 		}
@@ -304,23 +319,40 @@ public class Server {
 		// NEED TO SEE IF THE LEADERBOARD PRINTS HIGHEST SCORE TO LOWEST
 		
 		Map<String,Integer> myMap = new HashMap<String, Integer>(); // MAP TO STORE USERNAMES AND SCORES
-		String uname = ServerThread.username; // GETS THE USERNAME FROM THE SERVERTHREAD CLASS
+		String uname = ClientThread.username; // GETS THE USERNAME FROM THE SERVERTHREAD CLASS
 		
 		myMap.put(uname, score); // ADDS 2 VALUES TO THE MAP OBJECT CREATED - USERNAME FROM THE SERVERTHREAD CLASS AND SCORE VALUE
-//        System.out.println(myMap.toString()); // PRINTS THE MAP VALUES TO THE CMD
+		int usersInput = JOptionPane.showOptionDialog(null, myMap.toString(), "Leaderboard", JOptionPane.DEFAULT_OPTION,JOptionPane.INFORMATION_MESSAGE, null, new Object[]{}, null);
 		
-		for(int i1 = clients.size(); --i1 >= 0;) {
-			ServerThread ct = clients.get(i1);
+		for(int i1 = al.size(); --i1 >= 0;) {
+			ClientThread ct = al.get(i1);
 
-			if(!ct.writeMsg(myMap.toString())) {
-				clients.remove(i1);
+			if(!ct.writeMsg(Integer.toString(usersInput))) {
+				al.remove(i1);
 				display("Disconnected Client. User was removed from list");
 			}
 		}
 	}
 	
+	/*
+	 *  to broadcast a message to all Clients
+	 */	
+//	synchronized static void broadcast(String message) {
+//		System.out.print(message);
+//		
+//		// we loop in reverse order in case we would have to remove a Client
+//		// because it has disconnected
+//		for(int i = al.size(); --i >= 0;) {
+//			ClientThread ct = al.get(i);
+//			// try to write to the Client if it fails remove it from the list
+//			if(!ct.writeMsg(message)) {
+//				al.remove(i);
+//				display("Disconnected Client " + ct.username + " removed from list.");
+//			}
+//		}
+//	}
+	
 	public static String getHost() { // GET HOST METHOD
-		String host = "";
 		try {
 			host = InetAddress.getLocalHost().getHostName(); // USES INET TO GET HOSTNAME
 		} catch (UnknownHostException e) {
@@ -342,48 +374,47 @@ public class Server {
 		}
 		return port; // RETURNS VARIABLE PORT
 	}
-	
-	public static boolean writeMsg(String msg) { 
-	    if(!socket.isConnected()) {
-	        try {
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+
+	// for a client who logoff using the LOGOUT message
+	synchronized static void remove(int id) {
+		// scan the array list until we found the Id
+		for(int i = 0; i < al.size(); ++i) {
+			ClientThread ct = al.get(i);
+			// found it
+			if(ct.id == id) {
+				al.remove(i);
+				return;
 			}
-	    }
-	    return false;
-	}
-	
-	// METHOD BELOW NEEDS TO BE ADDEDD IF THE GUI IS CREATED AS USERS ONLINE NEED TO BE SHOWN
-	
-	//	public synchronized static void whosonline(){
-	//		for(int i = 0; i < clients.size(); ++i) {
-	//			ServerThread ct = clients.get(i);
-	//	        writeMsg((i+1) + ") " + ct.username);
-	//	    }
-	//	}
-	
-	// METHOD BELOW TO STORE NEW USER ACCOUNTS TO DATABASE WHICH IS CALLED ON THE CLIENT SIDE THROUGH THE REGISTER CLASS	
-	public void Database(String user, String pass, String name) // CONSTRUCTOR WITH PARAMETERS --> USER(USERNAME FROM REGISTER GUI), PASS(PASSWORD FROM REGISTER GUI), NAME(NAME FROM REGISTER GUI)
-	{
-		try {
-			Class.forName("org.h2.Driver"); 
-			Connection con = DriverManager.getConnection("jdbc:h2:~/test","sa","sa"); // CONNECTION TO DATABASE WITH PASSWORD AND USERNAME 'SA'
-			Statement state = con.createStatement();
-						
-			String table = "CREATE TABLE IF NOT EXISTS SAVEDUSERS (USERNAME VARCHAR(255) PRIMARY KEY, PASSWORD VARCHAR(255), NAME VARCHAR(255));"; // CREATES TABLE IN DATABASE IF IT DOESNT ALREADY EXISTS
-			int n = state.executeUpdate(table);
-
-			String insertQ = "INSERT INTO SAVEDUSERS VALUES('" + user + "', '" + pass + "', '" + name + "');"; // CREATES A NEW ROW IN THE TABLE ON THE DATABASE WITH THE VALUES PASSED THROUGH TO THE CLASS
-			int n1 = state.executeUpdate(insertQ);
-
-			state.close();
-			con.close();
-			
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
+
+	public static void main(String[] args) {
+		// create a server object and start it
+		Server server = new Server(getPort());
+		server.start();
+	}
+	
+	// METHOD BELOW TO STORE NEW USER ACCOUNTS TO DATABASE WHICH IS CALLED ON THE CLIENT SIDE THROUGH THE REGISTER CLASS	
+		public void Database(String user, String pass, String name) // CONSTRUCTOR WITH PARAMETERS --> USER(USERNAME FROM REGISTER GUI), PASS(PASSWORD FROM REGISTER GUI), NAME(NAME FROM REGISTER GUI)
+		{
+			try {
+				Class.forName("org.h2.Driver"); 
+				Connection con = DriverManager.getConnection("jdbc:h2:~/test","sa","sa"); // CONNECTION TO DATABASE WITH PASSWORD AND USERNAME 'SA'
+				Statement state = con.createStatement();
+							
+				String table = "CREATE TABLE IF NOT EXISTS SAVEDUSERS (USERNAME VARCHAR(255) PRIMARY KEY, PASSWORD VARCHAR(255), NAME VARCHAR(255));"; // CREATES TABLE IN DATABASE IF IT DOESNT ALREADY EXISTS
+				state.executeUpdate(table);
+
+				String insertQ = "INSERT INTO SAVEDUSERS VALUES('" + user + "', '" + pass + "', '" + name + "');"; // CREATES A NEW ROW IN THE TABLE ON THE DATABASE WITH THE VALUES PASSED THROUGH TO THE CLASS
+				state.executeUpdate(insertQ);
+
+				state.close();
+				con.close();
+				
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 }

@@ -73,9 +73,9 @@ public class Login implements ActionListener {
 				String uname = username.getText(); // GETS USERNAME FIELD STRING
 				String pass = password.getText(); // GETS PASSWORD FIEL STRING
 				
-				PracticeMode.displayName = uname;
-				FriendlyMode.displayName = uname;
-				TournamentMode.displayName = uname;
+//				PracticeMode.displayName = uname;
+//				FriendlyMode.displayName = uname;
+//				TournamentMode.displayName = uname;
 									
 				checkLogin(uname, pass); // PASSES THE USERNAME AND PASSWORD TO THE METHO 'CHECKLOGIN'			
 			}
@@ -85,7 +85,7 @@ public class Login implements ActionListener {
 		}
 		else if(e.getSource() == btnRegister) { // RUNS IF REGISTER BUTTON WAS PRESSED
 			login.dispose(); // CLOSES GUI
-			new Register(); // OPENS REGISTER GUI
+//			new Register(); // OPENS REGISTER GUI
 		}
 		else {
 			login.dispose(); // CLOSES GUI IF BUTTON 'EXIT' IS CLOSED
@@ -112,7 +112,8 @@ public class Login implements ActionListener {
 			if(user.equals(Uname) && (password.equals(pass))) // IF THE CORRECT USERNAME AND PASSWORD HAS BEEN ENETERED
 			{			
 				login.dispose(); // GUI CLOSES
-				new Options();
+//				new Options();
+				new ClientGUI();
 			}
 			else {
 				JOptionPane.showMessageDialog(null, "Username or/and Password not correct. Please try again or register", "Error", JOptionPane.ERROR_MESSAGE); // MESSAGE SAYING USERNAME OR PASSWORD IS WRONG AND ALLOWS THEM TO TRY AGAIN

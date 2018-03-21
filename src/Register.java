@@ -123,12 +123,13 @@ public class Register {
 			}
 			else if(!(user.equals(Uname))){ // IF USERNAME DOES NOT EXIST
 				register.dispose(); // CLOSES GUI
-				new Options();
+//				new Options();
+				new ClientGUI();
 				
 				Object[] options = {"OK"};
 				JOptionPane.showOptionDialog(null, "Account created! Click 'OK' to continue", "Account created", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]); // INFORMS USER THE ACCOUNT HAS BEEN MADE
 				
-				Server set = new Server(Server.port, null);
+				Server set = new Server(Server.port);
 				set.Database(user, password, Name); // SENDS VALUES TO DATABASE FOR ACCOUNT TO BE CREATED
 			}
 		} catch(ClassNotFoundException | SQLException e)
