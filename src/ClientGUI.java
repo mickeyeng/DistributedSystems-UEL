@@ -43,7 +43,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		// the server name anmd the port number
 		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
 		// the two JTextField with default value for server address and port number
-		tfServer = new JTextField(Login.username.getText());
+		tfServer = new JTextField("");
 //		tfPort = new JTextField("pass");
 //		tfPort.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -194,10 +194,10 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 		if(o == join) {
 			// ok it is a connection request
-			String username = tfServer.getText().trim();
+//			String username = tfServer.getText().trim();
 			// empty username ignore it
-			if(username.length() == 0)
-				return;
+//			if(username.length() == 0)
+//				return;
 			// empty serverAddress ignore it
 			String server = Client.getHost();
 //			if(server.length() == 0)
@@ -215,7 +215,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 //			}
 
 			// try creating a new Client with GUI
-			client = new Client(server, port, username, this);
+			client = new Client(server, port, "", this);
 			// test if we can start the Client
 			if(!client.start()) 
 				return;
@@ -237,7 +237,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	}
 
 	// to start the whole thing the server
-//	public static void main(String[] args) {
-//		new ClientGUI();
-//	}
+	public static void main(String[] args) {
+		new ClientGUI();
+	}
 }

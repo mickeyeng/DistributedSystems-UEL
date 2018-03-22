@@ -85,7 +85,7 @@ public class Login implements ActionListener {
 		}
 		else if(e.getSource() == btnRegister) { // RUNS IF REGISTER BUTTON WAS PRESSED
 			login.dispose(); // CLOSES GUI
-//			new Register(); // OPENS REGISTER GUI
+			new Register(); // OPENS REGISTER GUI
 		}
 		else {
 			login.dispose(); // CLOSES GUI IF BUTTON 'EXIT' IS CLOSED
